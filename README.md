@@ -1,6 +1,6 @@
 # The `qJSON`-parser
 > ### A quick and easy JSON parser.
-> This library should not be used in production, it is purely for learning rust and how its library system works.
+> ⚠ **WARNING:** This library should not be used in production, it is purely for learning rust and how its library system works.
 
 ## Introduction
 This is a simple JSON parser written in **Rust** with full support for [**JSON5**](https://json5.org/) serialization and deserialization.
@@ -50,13 +50,19 @@ The output is the parsed JSON object:
 The following features are provided by the library.
 
 ### Definition
-A JSON value is defined by the following:
+JSON values and numerical values are defined as following:
 ```rust
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
+pub enum JsonNumber {
+    Int(i64),
+    Float(f64),
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum JsonValue {
  Null,
  Bool(bool),
- Number(f64),
+ Number(JsonNumber),
  String(String),
  Array(Vec<Box<JsonValue>>),
  Object(HashMap<String, Box<JsonValue>>),

@@ -1,5 +1,6 @@
 # The `qJSON`-parser
-> ### A quick and easy JSON parser
+> ### A quick and easy JSON parser.
+> This library should not be used in production, it is purely for learning rust and how its library system works.
 
 ## Introduction
 This is a simple JSON parser written in **Rust** with full support for [**JSON5**](https://json5.org/) serialization and deserialization.

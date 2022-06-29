@@ -1,9 +1,18 @@
-use std::{collections::HashMap, any::Any};
+use std::{collections::HashMap, any::Any, fmt::Display};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum JsonNumber {
     Int(i64),
     Float(f64),
+}
+
+impl Display for JsonNumber {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            JsonNumber::Int(i) => write!(f, "{}", i),
+            JsonNumber::Float(v) => write!(f, "{}", v),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -15,6 +24,20 @@ pub enum JsonValue {
  String(String),
  Array(Vec<JsonValue>),
  Object(HashMap<String, JsonValue>),
+}
+
+impl Display for JsonValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            JsonValue::Unknown => write!(f, "Unknown"),
+            JsonValue::Null => write!(f, "Null"),
+            JsonValue::Bool(b) => write!(f, "{}", b),
+            JsonValue::Number(n) => write!(f, "{}", n),
+            JsonValue::String(s) => write!(f, "{}", s),
+            JsonValue::Array(a) => write!(f, "{:?}", a),
+            JsonValue::Object(o) => write!(f, "{:?}", o),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -85,15 +108,29 @@ pub fn parse_str(s: &str) -> Result<JsonValue, String> {
             },
             '}' if is_state_object_field() => {
                 
-                let mut object = pop_state().value.clone().into_object().unwrap();
-                let field = pop_state().value.clone().into_string().unwrap();
-                let value = pop_state().value.clone();
-                object.insert(field, value);
-                let mut object_value = JsonValue::Object(object);
-                states.pop();
-                states.pop();
-                states.pop();
-                new_state(ParseType::Object, object_value);
+                let mut object = pop_state().value.clone();
+                match object {
+                    JsonValue::Object(mut map) => {
+                        let key = pop_state().value.clone();
+                        let value = pop_state().value.clone();
+                        match key {
+                            JsonValue::String(s) => {
+                                map.insert(s, value);
+                                new_state(ParseType::Object, JsonValue::Object(map));
+                            },
+                            _ => {
+                                return Err(format!("Expected string for object key, got {}", key));
+                            }
+                        }
+                    },
+                    _ => {
+                        return Err(format!("Expected object, found {}", object));
+                    }
+                }
+                // let mut object_value = JsonValue::Object(object);
+                // states.pop();
+                // states.pop();
+                // states.pop();
             },
             _ if c.is_whitespace() && !is_state(ParseType::String) => continue,
             _ => return Err(format!("Unexpected character: {}", c)),
